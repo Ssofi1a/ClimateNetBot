@@ -4,7 +4,7 @@
 
 ## Features
 
-- Get live updates on climate conditions.
+- Get updates on climate conditions.
 - Receive alerts for significant climate changes and potential hazards.
 - Access personalized recommendations based on current conditions.
 - User-friendly interface to choose locations and devices.
@@ -30,7 +30,7 @@ To set up the ClimateNet bot locally, follow these steps:
 3. **Install dependencies:**
    `pip install -r requirements.txt`
 4. **Set up environment variables:**
-   Create a .env file in the root directory and add your Telegram bot token:
+   Create a .env file in the root directory and add Telegram bot token:
    TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 5. **Run the Django server:**
     `python manage.py runserver`
