@@ -28,15 +28,11 @@ To set up the ClimateNet bot locally, follow these steps:
 2.**Create a virtual environment:**
     `python -m venv venv`
     `source venv/bin/activate`  # On Windows use `venv\Scripts\activate`
-
 3. **Install dependencies:**
     `pip install -r requirements.txt`
-
 4. **Set up environment variables:**
     Create a .env file in the root directory and add your Telegram bot token:
      #TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-   
 5. **Run the Django server:**
     `python manage.py runserver`
-
-    And see the result in development server at http://127.0.0.1:8000/
+And see the result in development server at http://127.0.0.1:8000/
