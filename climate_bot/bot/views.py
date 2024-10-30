@@ -76,6 +76,13 @@ def start_bot_thread():
     bot_thread = threading.Thread(target=run_bot)
     bot_thread.start()
 
+def send_location_selection(chat_id):
+    location_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    for country in locations.keys():
+        location_markup.add(types.KeyboardButton(country))
+    
+    bot.send_message(chat_id, 'Please choose a location:', reply_markup=location_markup)
+
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(
@@ -92,13 +99,7 @@ With me, you can:
     🔹​​​​ Get personalized recommendations based on current conditions in your area.
 '''
     )
-
-    # Create the keyboard for locations
-    location_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    for country in locations.keys():
-        location_markup.add(types.KeyboardButton(country))
-    
-    bot.send_message(message.chat.id, 'Please choose a location:', reply_markup=location_markup)
+    send_location_selection(message.chat.id)
 
 @bot.message_handler(func=lambda message: message.text in locations.keys())
 def handle_country_selection(message):
@@ -110,7 +111,6 @@ def handle_country_selection(message):
     flag = '🇺🇲' if selected_country == 'USA' else '🇦🇲'
     bot.send_message(chat_id, f'You selected: {selected_country} {flag}')
     
-    # Ask to choose a device
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     for device in locations[selected_country]:
         markup.add(types.KeyboardButton(device))
@@ -129,25 +129,22 @@ def handle_device_selection(message):
 
     if device_id:
         bot.send_message(chat_id, f'You selected: {selected_device}📍​ (Device ID: {device_id})')
-        
         show_command_menu(chat_id)
     else:
         bot.send_message(chat_id, 'Device not found.')
 
+
 def show_command_menu(chat_id):
     command_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     command_markup.add(
-        types.KeyboardButton('/start'),
-        types.KeyboardButton('/current'),
-        types.KeyboardButton('/help'),
-        types.KeyboardButton('/setalert'),
-        types.KeyboardButton('/removealert'),
-        types.KeyboardButton('/website')
+        types.KeyboardButton('/Current 📍'),
+        types.KeyboardButton('/Change_device 🔄'),
+        types.KeyboardButton('/Help ❓'),
+        types.KeyboardButton('/Website 🌐'),
     )
+    bot.send_message(chat_id, 'ⓘ Choose /Current to get the latest data or /Help for more commands:', reply_markup=command_markup)
 
-    bot.send_message(chat_id, 'ⓘ Choose /current to get the latest data or /help for more commands:', reply_markup=command_markup)
-
-@bot.message_handler(commands=['current'])
+@bot.message_handler(commands=['Current'])
 def get_current_data(message):
     chat_id = message.chat.id
     
@@ -160,34 +157,41 @@ def get_current_data(message):
             formatted_data = (
                 f"Latest Measurement ({measurement['timestamp']}):\n"
                 f"☀️ UV Index: {measurement['uv']}\n"
-                f"🌟​ Light Intensity: {measurement['lux']} lux\n"
+                f"🔆​ Light Intensity: {measurement['lux']} lux\n"
                 f"🌡️ Temperature: {measurement['temperature']}°C\n"
                 f"⏲️ Pressure: {measurement['pressure']} hPa\n"
                 f"💧 Humidity: {measurement['humidity']}%\n"
-                f"🌫️​ PM1: {measurement['pm1']} µg/m³\n"
-                f"🌫️​ PM2.5: {measurement['pm2_5']} µg/m³\n"
+                f"💨​​ PM1: {measurement['pm1']} µg/m³\n"
+                f"🫁​​ PM2.5: {measurement['pm2_5']} µg/m³\n"
                 f"🌫️​ PM10: {measurement['pm10']} µg/m³\n"
-                f"💨 Wind Speed: {measurement['wind_speed']} m/s\n"
+                f"🌪️ Wind Speed: {measurement['wind_speed']} m/s\n"
                 f"🌧️ Rainfall: {measurement['rain']} mm\n"
-                f"🌪️ Wind Direction: {measurement['wind_direction']}"
+                f"🧭​ Wind Direction: {measurement['wind_direction']}"
             )
             bot.send_message(chat_id, formatted_data)
         else:
             bot.send_message(chat_id, "Error retrieving data. Please try again later.")
     else:
-        bot.send_message(chat_id, "⚠️ Please select a device first using /start.")
+        bot.send_message(chat_id, "⚠️ Please select a device first using /Change_device.")
 
-@bot.message_handler(commands=['help'])
+@bot.message_handler(commands=['Help'])
 def help(message):
-    bot.send_message(message.chat.id, '''<b>/start:</b> Start interacting with the bot.\n
-<b>/help:</b> Show available commands.\n
-<b>/current:</b> Get the latest climate data.\n
-<b>/setalert:</b> Set alerts for climate thresholds.\n
-<b>/removealert:</b> Remove set alerts.\n
-<b>/website:</b> Visit our website for more info.
+    bot.send_message(message.chat.id, '''
+<b>/Help:</b> Show available commands.\n
+<b>/Current:</b> Get the latest climate data.\n
+<b>/Website:</b> Visit our website for more info.
 ''', parse_mode='HTML')
 
-@bot.message_handler(commands=['website'])
+@bot.message_handler(commands=['Change_device'])
+def change_device(message):
+    chat_id = message.chat.id
+
+    if chat_id in user_context:
+        user_context[chat_id].pop('selected_device', None)
+        user_context[chat_id].pop('device_id', None)
+    send_location_selection(chat_id)
+
+@bot.message_handler(commands=['Website'])
 def website(message):
     markup = types.InlineKeyboardMarkup()
     button = types.InlineKeyboardButton('Visit Website', url='https://climatenet.am/en/')
@@ -204,8 +208,8 @@ def handle_media(message):
     bot.send_message(
         message.chat.id,
         '''⚠️ I can only process text commands.
-Please use <u>valid</u> commands.
-ⓘ Type <b>/help</b> to see available commands.''', parse_mode='HTML')
+Please use valid commands.
+''', parse_mode='HTML')
 
 def run_bot_view(request):
     start_bot_thread()
