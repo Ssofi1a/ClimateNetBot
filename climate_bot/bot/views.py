@@ -17,7 +17,7 @@ locations = {
     'Yerevan': ['V. Sargsyan', 'TUMO'],
     'Shirak': ['Maralik', 'Panik', 'Azatan', 'Artik', 'Ashotsk', 'Amasia', 'Hatsik', 'Akhuryan', 'Yerazgavors'],
     'Gegharkunik': ['Sevan', 'Gavar', 'Chambarak'],
-    'Tavush': ['Berd', 'Artsvaberd', 'Ijevan', 'Azatamut'],
+    'Tavush': ['Berd', 'Artsvaberd', 'Ijevan', 'Azatamut', 'Koxb'],
     'Lori': ['Stepanavan', 'Spitak', 'Alaverdi', 'Odzun', 'Dsegh', 'Shnogh'],
     'Vayots Dzor': ['Areni', 'Vayk', 'Jermuk'],
     'USA': ['New York']
@@ -27,7 +27,7 @@ device_ids = {
     'Maralik': 1, 'Panik': 2, 'Azatan': 3, 'Artik': 4, 'Ashotsk': 5, 'Gavar': 6, 'Akhuryan': 7, 'V. Sargsyan': 8,
     'Sevan': 9, 'Hatsik': 10, 'Amasia': 11, 'Yerazgavors': 12, 'Artsvaberd': 13, 'TUMO': 14, 'Ijevan': 15, 'Berd': 16,
     'Chambarak': 17, 'Azatamut': 18, 'Spitak': 19, 'Stepanavan': 20, 'Vayk': 21, 'Areni': 22, 'Jermuk': 23, 'New York': 26,
-    'Odzun': 27, 'Dsegh': 28, 'Shnogh': 29
+    'Odzun': 27, 'Dsegh': 28, 'Shnogh': 29, 'Koxb': 30
 }
 
 user_context = {}
@@ -128,7 +128,7 @@ def handle_device_selection(message):
         user_context[chat_id]['device_id'] = device_id
 
     if device_id:
-        bot.send_message(chat_id, f'You selected: {selected_device}📍​ (Device ID: {device_id})')
+        bot.send_message(chat_id, f'You selected: {selected_device}📍​')
         show_command_menu(chat_id)
     else:
         bot.send_message(chat_id, 'Device not found.')
@@ -179,6 +179,7 @@ def help(message):
     bot.send_message(message.chat.id, '''
 <b>/Help:</b> Show available commands.\n
 <b>/Current:</b> Get the latest climate data.\n
+<b>/Change_device:</b> Change to a different climate monitoring device.\n
 <b>/Website:</b> Visit our website for more info.
 ''', parse_mode='HTML')
 
