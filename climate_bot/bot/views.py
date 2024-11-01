@@ -17,7 +17,7 @@ locations = {
     'Yerevan': ['V. Sargsyan', 'TUMO'],
     'Shirak': ['Maralik', 'Panik', 'Azatan', 'Artik', 'Ashotsk', 'Amasia', 'Hatsik', 'Akhuryan', 'Yerazgavors'],
     'Gegharkunik': ['Sevan', 'Gavar', 'Chambarak'],
-    'Tavush': ['Berd', 'Artsvaberd', 'Ijevan', 'Azatamut', 'Koxb'],
+    'Tavush': ['Berd', 'Artsvaberd', 'Ijevan', 'Azatamut', 'Koghb'],
     'Lori': ['Stepanavan', 'Spitak', 'Alaverdi', 'Odzun', 'Dsegh', 'Shnogh'],
     'Vayots Dzor': ['Areni', 'Vayk', 'Jermuk'],
     'USA': ['New York']
@@ -26,8 +26,8 @@ locations = {
 device_ids = {
     'Maralik': 1, 'Panik': 2, 'Azatan': 3, 'Artik': 4, 'Ashotsk': 5, 'Gavar': 6, 'Akhuryan': 7, 'V. Sargsyan': 8,
     'Sevan': 9, 'Hatsik': 10, 'Amasia': 11, 'Yerazgavors': 12, 'Artsvaberd': 13, 'TUMO': 14, 'Ijevan': 15, 'Berd': 16,
-    'Chambarak': 17, 'Azatamut': 18, 'Spitak': 19, 'Stepanavan': 20, 'Vayk': 21, 'Areni': 22, 'Jermuk': 23, 'New York': 26,
-    'Odzun': 27, 'Dsegh': 28, 'Shnogh': 29, 'Koxb': 30
+    'Chambarak': 17, 'Azatamut': 18, 'Spitak': 19, 'Stepanavan': 20, 'Vayk': 21, 'Areni': 22, 'Jermuk': 23, 'Alaverdi': 25,
+    'New York': 26, 'Odzun': 27, 'Dsegh': 28, 'Shnogh': 29, 'Koghb': 30
 }
 
 user_context = {}
@@ -81,7 +81,7 @@ def send_location_selection(chat_id):
     for country in locations.keys():
         location_markup.add(types.KeyboardButton(country))
     
-    bot.send_message(chat_id, 'Please choose a location:', reply_markup=location_markup)
+    bot.send_message(chat_id, 'Please choose a location: 📍', reply_markup=location_markup)
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -94,7 +94,7 @@ def start(message):
         f'''Hello {message.from_user.first_name}! 👋​ I am your personal climate assistant. 
         
 With me, you can: 
-    🔹​​​​ Get updates on temperature, humidity, wind speed, and more.
+    🔹​​​ Access current measurements of temperature, humidity, wind speed, and more, refreshed every 15 minutes for reliable updates.
     🔹​​​​ Receive alerts for significant climate changes.
     🔹​​​​ Get personalized recommendations based on current conditions in your area.
 '''
@@ -105,17 +105,12 @@ With me, you can:
 def handle_country_selection(message):
     selected_country = message.text
     chat_id = message.chat.id
-    
     user_context[chat_id] = {'selected_country': selected_country}
-    
-    flag = '🇺🇲' if selected_country == 'USA' else '🇦🇲'
-    bot.send_message(chat_id, f'You selected: {selected_country} {flag}')
-    
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     for device in locations[selected_country]:
         markup.add(types.KeyboardButton(device))
 
-    bot.send_message(chat_id, 'Choose a device:', reply_markup=markup)
+    bot.send_message(chat_id, 'Please choose a device: ✔️', reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text in [device for devices in locations.values() for device in devices])
 def handle_device_selection(message):
@@ -128,13 +123,32 @@ def handle_device_selection(message):
         user_context[chat_id]['device_id'] = device_id
 
     if device_id:
-        bot.send_message(chat_id, f'You selected: {selected_device}📍​')
-        show_command_menu(chat_id)
+        command_markup = get_command_menu()
+        measurement = fetch_latest_measurement(device_id)
+        if measurement:
+            formatted_data = (
+                f"Latest Measurement ({measurement['timestamp']}):\n"
+                f"☀️ UV Index: {measurement['uv']}\n"
+                f"🔆​ Light Intensity: {measurement['lux']} lux\n"
+                f"🌡️ Temperature: {measurement['temperature']}°C\n"
+                f"⏲️ Pressure: {measurement['pressure']} hPa\n"
+                f"💧 Humidity: {measurement['humidity']}%\n"
+                f"💨​​ PM1: {measurement['pm1']} µg/m³\n"
+                f"🫁​​ PM2.5: {measurement['pm2_5']} µg/m³\n"
+                f"🌫️​ PM10: {measurement['pm10']} µg/m³\n"
+                f"🌪️ Wind Speed: {measurement['wind_speed']} m/s\n"
+                f"🌧️ Rainfall: {measurement['rain']} mm\n"
+                f"🧭​ Wind Direction: {measurement['wind_direction']}"
+            )
+            
+            bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
+        else:
+            bot.send_message(chat_id, "⚠️ Error retrieving data. Please try again later.", reply_markup=command_markup)
     else:
-        bot.send_message(chat_id, 'Device not found.')
+        bot.send_message(chat_id, 'Device not found. ❌​')
 
 
-def show_command_menu(chat_id):
+def get_command_menu():
     command_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     command_markup.add(
         types.KeyboardButton('/Current 📍'),
@@ -142,11 +156,12 @@ def show_command_menu(chat_id):
         types.KeyboardButton('/Help ❓'),
         types.KeyboardButton('/Website 🌐'),
     )
-    bot.send_message(chat_id, 'ⓘ Choose /Current to get the latest data or /Help for more commands:', reply_markup=command_markup)
+    return command_markup
 
 @bot.message_handler(commands=['Current'])
 def get_current_data(message):
     chat_id = message.chat.id
+    command_markup = get_command_menu()
     
     if chat_id in user_context and 'device_id' in user_context[chat_id]:
         device_id = user_context[chat_id]['device_id']
@@ -168,11 +183,11 @@ def get_current_data(message):
                 f"🌧️ Rainfall: {measurement['rain']} mm\n"
                 f"🧭​ Wind Direction: {measurement['wind_direction']}"
             )
-            bot.send_message(chat_id, formatted_data)
+            bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
         else:
-            bot.send_message(chat_id, "Error retrieving data. Please try again later.")
+            bot.send_message(chat_id, "⚠️ Error retrieving data. Please try again later.", reply_markup=command_markup)
     else:
-        bot.send_message(chat_id, "⚠️ Please select a device first using /Change_device.")
+        bot.send_message(chat_id, "⚠️ Please select a device first using /Change_device.", reply_markup=command_markup)
 
 @bot.message_handler(commands=['Help'])
 def help(message):
@@ -200,7 +215,7 @@ def website(message):
 
     bot.send_message(
         message.chat.id,
-        'For more information, click the button below to visit our official website: 🌐​',
+        'For more information, click the button below to visit our official website: 모​',
         reply_markup=markup
     )
 
