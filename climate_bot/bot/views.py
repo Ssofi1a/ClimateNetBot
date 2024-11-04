@@ -110,7 +110,7 @@ def handle_country_selection(message):
     for device in locations[selected_country]:
         markup.add(types.KeyboardButton(device))
 
-    bot.send_message(chat_id, 'Please choose a device: ✔️', reply_markup=markup)
+    bot.send_message(chat_id, 'Please choose a device: ✅​', reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text in [device for devices in locations.values() for device in devices])
 def handle_device_selection(message):
@@ -142,6 +142,8 @@ def handle_device_selection(message):
             )
             
             bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
+            bot.send_message(chat_id, '''For the next measurement select
+/Current 📍 in next quarter. 🕒​''')
         else:
             bot.send_message(chat_id, "⚠️ Error retrieving data. Please try again later.", reply_markup=command_markup)
     else:
@@ -184,18 +186,20 @@ def get_current_data(message):
                 f"🧭​ Wind Direction: {measurement['wind_direction']}"
             )
             bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
+            bot.send_message(chat_id, '''For the next measurement select
+/Current 📍 in next quarter. 🕒​''')
         else:
             bot.send_message(chat_id, "⚠️ Error retrieving data. Please try again later.", reply_markup=command_markup)
     else:
-        bot.send_message(chat_id, "⚠️ Please select a device first using /Change_device.", reply_markup=command_markup)
+        bot.send_message(chat_id, "⚠️ Please select a device first using /Change_device 🔄.", reply_markup=command_markup)
 
 @bot.message_handler(commands=['Help'])
 def help(message):
     bot.send_message(message.chat.id, '''
-<b>/Help:</b> Show available commands.\n
-<b>/Current:</b> Get the latest climate data.\n
-<b>/Change_device:</b> Change to a different climate monitoring device.\n
-<b>/Website:</b> Visit our website for more info.
+<b>/Current 📍:</b> Get the latest climate data in selected location.\n
+<b>/Change_device 🔄:</b> Change to a different climate monitoring device.\n
+<b>/Help ❓:</b> Show available commands.\n
+<b>/Website 🌐:</b> Visit our website for more info.
 ''', parse_mode='HTML')
 
 @bot.message_handler(commands=['Change_device'])
@@ -215,7 +219,7 @@ def website(message):
 
     bot.send_message(
         message.chat.id,
-        'For more information, click the button below to visit our official website: 모​',
+        'For more information, click the button below to visit our official website: 🖥️​',
         reply_markup=markup
     )
 
@@ -223,9 +227,17 @@ def website(message):
 def handle_media(message):
     bot.send_message(
         message.chat.id,
-        '''⚠️ I can only process text commands.
-Please use valid commands.
-''', parse_mode='HTML')
+        '''❗ Please use a valid command.
+You can see all available commands by typing /Help❓
+''')
+
+@bot.message_handler(func=lambda message: not message.text.startswith('/'))
+def handle_text(message):
+    bot.send_message(
+        message.chat.id,
+        '''❗ Please use a valid command.
+You can see all available commands by typing /Help❓
+''')
 
 def run_bot_view(request):
     start_bot_thread()
