@@ -127,7 +127,7 @@ def handle_device_selection(message):
         measurement = fetch_latest_measurement(device_id)
         if measurement:
             formatted_data = (
-                f"Latest Measurement ({measurement['timestamp']}):\n"
+                f"Latest Measurement in {selected_device} ({measurement['timestamp']}):\n"
                 f"☀️ UV Index: {measurement['uv']}\n"
                 f"🔆​ Light Intensity: {measurement['lux']} lux\n"
                 f"🌡️ Temperature: {measurement['temperature']}°C\n"
@@ -157,6 +157,7 @@ def get_command_menu():
         types.KeyboardButton('/Change_device 🔄'),
         types.KeyboardButton('/Help ❓'),
         types.KeyboardButton('/Website 🌐'),
+        types.KeyboardButton('/Map 🗺️'),
     )
     return command_markup
 
@@ -167,19 +168,18 @@ def get_current_data(message):
     
     if chat_id in user_context and 'device_id' in user_context[chat_id]:
         device_id = user_context[chat_id]['device_id']
-        
+        selected_device = user_context[chat_id].get('selected_device')
         measurement = fetch_latest_measurement(device_id)
-        
         if measurement:
             formatted_data = (
-                f"Latest Measurement ({measurement['timestamp']}):\n"
+                f"Latest Measurement in {selected_device} ({measurement['timestamp']}):\n"
                 f"☀️ UV Index: {measurement['uv']}\n"
                 f"🔆​ Light Intensity: {measurement['lux']} lux\n"
                 f"🌡️ Temperature: {measurement['temperature']}°C\n"
                 f"⏲️ Pressure: {measurement['pressure']} hPa\n"
                 f"💧 Humidity: {measurement['humidity']}%\n"
-                f"💨​​ PM1: {measurement['pm1']} µg/m³\n"
-                f"🫁​​ PM2.5: {measurement['pm2_5']} µg/m³\n"
+                f"🫁​ PM1: {measurement['pm1']} µg/m³\n"
+                f"💨​​ PM2.5: {measurement['pm2_5']} µg/m³\n"
                 f"🌫️​ PM10: {measurement['pm10']} µg/m³\n"
                 f"🌪️ Wind Speed: {measurement['wind_speed']} m/s\n"
                 f"🌧️ Rainfall: {measurement['rain']} mm\n"
@@ -199,7 +199,8 @@ def help(message):
 <b>/Current 📍:</b> Get the latest climate data in selected location.\n
 <b>/Change_device 🔄:</b> Change to a different climate monitoring device.\n
 <b>/Help ❓:</b> Show available commands.\n
-<b>/Website 🌐:</b> Visit our website for more info.
+<b>/Website 🌐:</b> Visit our website for more info.\n
+<b>/Map 🗺️​:</b> View the locations of all devices on a map.
 ''', parse_mode='HTML')
 
 @bot.message_handler(commands=['Change_device'])
@@ -222,6 +223,17 @@ def website(message):
         'For more information, click the button below to visit our official website: 🖥️​',
         reply_markup=markup
     )
+
+
+@bot.message_handler(commands=['Map'])
+def map(message):
+    chat_id = message.chat.id
+    image_path = '/Users/sofiabovyan/Desktop/ClimateNetBot/climate_bot/media/map.png'
+    if os.path.exists(image_path):
+        with open(image_path, 'rb') as image:
+            bot.send_photo(chat_id, photo = image)
+    else:
+        bot.send_message(chat_id, "⚠️ Error: Map image not found.")
 
 @bot.message_handler(content_types=['audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice', 'contact', 'location', 'venue', 'animation'])
 def handle_media(message):
