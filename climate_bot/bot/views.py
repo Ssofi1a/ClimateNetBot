@@ -7,28 +7,42 @@ import threading
 import time
 import os
 from dotenv import load_dotenv
+from bot.models import Device
+from collections import defaultdict
 
 load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
-locations = {
-    'Yerevan': ['V. Sargsyan', 'TUMO'],
-    'Shirak': ['Maralik', 'Panik', 'Azatan', 'Artik', 'Ashotsk', 'Amasia', 'Hatsik', 'Akhuryan', 'Yerazgavors'],
-    'Gegharkunik': ['Sevan', 'Gavar', 'Chambarak'],
-    'Tavush': ['Berd', 'Artsvaberd', 'Ijevan', 'Azatamut', 'Koghb'],
-    'Lori': ['Stepanavan', 'Spitak', 'Alaverdi', 'Odzun', 'Dsegh', 'Shnogh'],
-    'Vayots Dzor': ['Areni', 'Vayk', 'Jermuk'],
-    'USA': ['New York']
-}
+# locations = {
+#     'Yerevan': ['V. Sargsyan', 'TUMO'],
+#     'Shirak': ['Maralik', 'Panik', 'Azatan', 'Artik', 'Ashotsk', 'Amasia', 'Hatsik', 'Akhuryan', 'Yerazgavors'],
+#     'Gegharkunik': ['Sevan', 'Gavar', 'Chambarak'],
+#     'Tavush': ['Berd', 'Artsvaberd', 'Ijevan', 'Azatamut', 'Koghb'],
+#     'Lori': ['Stepanavan', 'Spitak', 'Alaverdi', 'Odzun', 'Dsegh', 'Shnogh'],
+#     'Vayots Dzor': ['Areni', 'Vayk', 'Jermuk'],
+#     'USA': ['New York']
+# }
 
-device_ids = {
-    'Maralik': 1, 'Panik': 2, 'Azatan': 3, 'Artik': 4, 'Ashotsk': 5, 'Gavar': 6, 'Akhuryan': 7, 'V. Sargsyan': 8,
-    'Sevan': 9, 'Hatsik': 10, 'Amasia': 11, 'Yerazgavors': 12, 'Artsvaberd': 13, 'TUMO': 14, 'Ijevan': 15, 'Berd': 16,
-    'Chambarak': 17, 'Azatamut': 18, 'Spitak': 19, 'Stepanavan': 20, 'Vayk': 21, 'Areni': 22, 'Jermuk': 23, 'Alaverdi': 25,
-    'New York': 26, 'Odzun': 27, 'Dsegh': 28, 'Shnogh': 29, 'Koghb': 30
-}
+# device_ids = {
+#     'Maralik': 1, 'Panik': 2, 'Azatan': 3, 'Artik': 4, 'Ashotsk': 5, 'Gavar': 6, 'Akhuryan': 7, 'V. Sargsyan': 8,
+#     'Sevan': 9, 'Hatsik': 10, 'Amasia': 11, 'Yerazgavors': 12, 'Artsvaberd': 13, 'TUMO': 14, 'Ijevan': 15, 'Berd': 16,
+#     'Chambarak': 17, 'Azatamut': 18, 'Spitak': 19, 'Stepanavan': 20, 'Vayk': 21, 'Areni': 22, 'Jermuk': 23, 'Alaverdi': 25,
+#     'New York': 26, 'Odzun': 27, 'Dsegh': 28, 'Shnogh': 29, 'Koghb': 30
+# }
+
+def get_device_data():
+    locations = defaultdict(list)
+    device_ids = {}
+    devices = Device.objects.all()
+    for device in devices:
+        device_ids[device.name] = device.generated_id
+        locations[device.parent_name].append(device.name)
+
+    return locations, device_ids
+
+locations, device_ids = get_device_data()
 
 user_context = {}
 
@@ -94,9 +108,9 @@ def start(message):
         f'''Hello {message.from_user.first_name}! 👋​ I am your personal climate assistant. 
         
 With me, you can: 
-    🔹​​​ Access current measurements of temperature, humidity, wind speed, and more, refreshed every 15 minutes for reliable updates.
+    🔹​​​ Access current measurements of temperature, humidity, wind speed, and more, which are refreshed every 15 minutes for reliable updates.
     🔹​​​​ Receive alerts for significant climate changes.
-    🔹​​​​ Get personalized recommendations based on current conditions in your area.
+    🔹​​​​ Get personalized recommendations based on the current conditions in your area.
 '''
     )
     send_location_selection(message.chat.id)
@@ -127,7 +141,7 @@ def handle_device_selection(message):
         measurement = fetch_latest_measurement(device_id)
         if measurement:
             formatted_data = (
-                f"Latest Measurement in {selected_device} ({measurement['timestamp']}):\n"
+                f"Latest Measurements in {selected_device} ({measurement['timestamp']}):\n"
                 f"☀️ UV Index: {measurement['uv']}\n"
                 f"🔆​ Light Intensity: {measurement['lux']} lux\n"
                 f"🌡️ Temperature: {measurement['temperature']}°C\n"
