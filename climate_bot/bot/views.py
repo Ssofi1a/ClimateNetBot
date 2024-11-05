@@ -109,8 +109,6 @@ def start(message):
         
 With me, you can: 
     🔹​​​ Access current measurements of temperature, humidity, wind speed, and more, which are refreshed every 15 minutes for reliable updates.
-    🔹​​​​ Receive alerts for significant climate changes.
-    🔹​​​​ Get personalized recommendations based on the current conditions in your area.
 '''
     )
     send_location_selection(message.chat.id)
@@ -147,8 +145,8 @@ def handle_device_selection(message):
                 f"🌡️ Temperature: {measurement['temperature']}°C\n"
                 f"⏲️ Pressure: {measurement['pressure']} hPa\n"
                 f"💧 Humidity: {measurement['humidity']}%\n"
-                f"💨​​ PM1: {measurement['pm1']} µg/m³\n"
-                f"🫁​​ PM2.5: {measurement['pm2_5']} µg/m³\n"
+                f"🫁​​ PM1: {measurement['pm1']} µg/m³\n"
+                f"💨​ PM2.5: {measurement['pm2_5']} µg/m³\n"
                 f"🌫️​ PM10: {measurement['pm10']} µg/m³\n"
                 f"🌪️ Wind Speed: {measurement['wind_speed']} m/s\n"
                 f"🌧️ Rainfall: {measurement['rain']} mm\n"
@@ -211,9 +209,9 @@ def get_current_data(message):
 def help(message):
     bot.send_message(message.chat.id, '''
 <b>/Current 📍:</b> Get the latest climate data in selected location.\n
-<b>/Change_device 🔄:</b> Change to a different climate monitoring device.\n
+<b>/Change_device 🔄:</b> Change to another climate monitoring device.\n
 <b>/Help ❓:</b> Show available commands.\n
-<b>/Website 🌐:</b> Visit our website for more info.\n
+<b>/Website 🌐:</b> Visit our website for more information.\n
 <b>/Map 🗺️​:</b> View the locations of all devices on a map.
 ''', parse_mode='HTML')
 
