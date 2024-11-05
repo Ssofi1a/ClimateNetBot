@@ -15,23 +15,6 @@ load_dotenv()
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
-# locations = {
-#     'Yerevan': ['V. Sargsyan', 'TUMO'],
-#     'Shirak': ['Maralik', 'Panik', 'Azatan', 'Artik', 'Ashotsk', 'Amasia', 'Hatsik', 'Akhuryan', 'Yerazgavors'],
-#     'Gegharkunik': ['Sevan', 'Gavar', 'Chambarak'],
-#     'Tavush': ['Berd', 'Artsvaberd', 'Ijevan', 'Azatamut', 'Koghb'],
-#     'Lori': ['Stepanavan', 'Spitak', 'Alaverdi', 'Odzun', 'Dsegh', 'Shnogh'],
-#     'Vayots Dzor': ['Areni', 'Vayk', 'Jermuk'],
-#     'USA': ['New York']
-# }
-
-# device_ids = {
-#     'Maralik': 1, 'Panik': 2, 'Azatan': 3, 'Artik': 4, 'Ashotsk': 5, 'Gavar': 6, 'Akhuryan': 7, 'V. Sargsyan': 8,
-#     'Sevan': 9, 'Hatsik': 10, 'Amasia': 11, 'Yerazgavors': 12, 'Artsvaberd': 13, 'TUMO': 14, 'Ijevan': 15, 'Berd': 16,
-#     'Chambarak': 17, 'Azatamut': 18, 'Spitak': 19, 'Stepanavan': 20, 'Vayk': 21, 'Areni': 22, 'Jermuk': 23, 'Alaverdi': 25,
-#     'New York': 26, 'Odzun': 27, 'Dsegh': 28, 'Shnogh': 29, 'Koghb': 30
-# }
-
 def get_device_data():
     locations = defaultdict(list)
     device_ids = {}
@@ -57,17 +40,17 @@ def fetch_latest_measurement(device_id):
             timestamp = latest_measurement["time"].replace("T", " ")
             return {
                 "timestamp": timestamp,
-                "uv": latest_measurement["uv"],
-                "lux": latest_measurement["lux"],
-                "temperature": latest_measurement["temperature"],
-                "pressure": latest_measurement["pressure"],
-                "humidity": latest_measurement["humidity"],
-                "pm1": latest_measurement["pm1"],
-                "pm2_5": latest_measurement["pm2_5"],
-                "pm10": latest_measurement["pm10"],
-                "wind_speed": latest_measurement["speed"],
-                "rain": latest_measurement["rain"],
-                "wind_direction": latest_measurement["direction"]
+                "uv": latest_measurement.get("uv"),
+                "lux": latest_measurement.get("lux"),
+                "temperature": latest_measurement.get("temperature"),
+                "pressure": latest_measurement.get("pressure"),
+                "humidity": latest_measurement.get("humidity"),
+                "pm1": latest_measurement.get("pm1"),
+                "pm2_5": latest_measurement.get("pm2_5"),
+                "pm10": latest_measurement.get("pm10"),
+                "wind_speed": latest_measurement.get("speed"),
+                "rain": latest_measurement.get("rain"),
+                "wind_direction": latest_measurement.get("direction")
             }
         else:
             return None
@@ -150,7 +133,8 @@ def handle_device_selection(message):
                 f"🌫️​ PM10: {measurement['pm10']} µg/m³\n"
                 f"🌪️ Wind Speed: {measurement['wind_speed']} m/s\n"
                 f"🌧️ Rainfall: {measurement['rain']} mm\n"
-                f"🧭​ Wind Direction: {measurement['wind_direction']}"
+                f"🧭​ Wind Direction: {measurement['wind_direction']}\n\n"
+                f"⚠️ Some measurements may have issues."
             )
             
             bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
@@ -195,7 +179,8 @@ def get_current_data(message):
                 f"🌫️​ PM10: {measurement['pm10']} µg/m³\n"
                 f"🌪️ Wind Speed: {measurement['wind_speed']} m/s\n"
                 f"🌧️ Rainfall: {measurement['rain']} mm\n"
-                f"🧭​ Wind Direction: {measurement['wind_direction']}"
+                f"🧭​ Wind Direction: {measurement['wind_direction']}\n\n"
+                f"⚠️ Some measurements may have issues."
             )
             bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
             bot.send_message(chat_id, '''For the next measurement select
@@ -211,7 +196,7 @@ def help(message):
 <b>/Current 📍:</b> Get the latest climate data in selected location.\n
 <b>/Change_device 🔄:</b> Change to another climate monitoring device.\n
 <b>/Help ❓:</b> Show available commands.\n
-<b>/Website 🌐:</b> Visit our website for more information.\n
+<b>/Website 🌐:</b> Visit our website for more info.\n
 <b>/Map 🗺️​:</b> View the locations of all devices on a map.
 ''', parse_mode='HTML')
 
