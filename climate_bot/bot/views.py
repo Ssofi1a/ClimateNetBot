@@ -1,6 +1,6 @@
-import requests
-from django.http import JsonResponse
-from django.views import View
+#import requests
+#from django.http import JsonResponse
+#from django.views import View
 import telebot
 from telebot import types
 import threading
@@ -15,6 +15,12 @@ load_dotenv()
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
+
+import django
+from djano.conf import settings
+
+django.setup()
+
 def get_device_data():
     locations = defaultdict(list)
     device_ids = {}
@@ -26,7 +32,6 @@ def get_device_data():
     return locations, device_ids
 
 locations, device_ids = get_device_data()
-
 user_context = {}
 
 def fetch_latest_measurement(device_id):
@@ -138,8 +143,7 @@ def handle_device_selection(message):
             )
             
             bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
-            bot.send_message(chat_id, '''For the next measurement select
-/Current 📍 in next quarter. 🕒​''')
+            bot.send_message(chat_id, '''For the next measurement, select /Current 📍 every quarter of the hour. 🕒​''')
         else:
             bot.send_message(chat_id, "⚠️ Error retrieving data. Please try again later.", reply_markup=command_markup)
     else:
@@ -183,8 +187,7 @@ def get_current_data(message):
                 f"⚠️ Some measurements may have issues."
             )
             bot.send_message(chat_id, formatted_data, reply_markup=command_markup)
-            bot.send_message(chat_id, '''For the next measurement select
-/Current 📍 in next quarter. 🕒​''')
+            bot.send_message(chat_id, '''For the next measurement, select /Current 📍 every quarter of the hour. 🕒​''')
         else:
             bot.send_message(chat_id, "⚠️ Error retrieving data. Please try again later.", reply_markup=command_markup)
     else:
@@ -196,7 +199,7 @@ def help(message):
 <b>/Current 📍:</b> Get the latest climate data in selected location.\n
 <b>/Change_device 🔄:</b> Change to another climate monitoring device.\n
 <b>/Help ❓:</b> Show available commands.\n
-<b>/Website 🌐:</b> Visit our website for more info.\n
+<b>/Website 🌐:</b> Visit our website for more information.\n
 <b>/Map 🗺️​:</b> View the locations of all devices on a map.
 ''', parse_mode='HTML')
 
@@ -225,10 +228,12 @@ def website(message):
 @bot.message_handler(commands=['Map'])
 def map(message):
     chat_id = message.chat.id
-    image_path = '/Users/sofiabovyan/Desktop/ClimateNetBot/climate_bot/media/map.png'
+    image_path = 'https://images-in-website.s3.us-east-1.amazonaws.com/Bot/map.jpg'
     if os.path.exists(image_path):
         with open(image_path, 'rb') as image:
             bot.send_photo(chat_id, photo = image)
+            bot.send_message(chat_id, 
+            '''📌 The highlighted locations indicate the current active climate devices. 🗺️ ''')
     else:
         bot.send_message(chat_id, "⚠️ Error: Map image not found.")
 
@@ -248,6 +253,8 @@ def handle_text(message):
 You can see all available commands by typing /Help❓
 ''')
 
-def run_bot_view(request):
+if __name__ == "__main__":
     start_bot_thread()
-    return JsonResponse({'status': 'Bot is running in the background!'})
+# def run_bot_view(request):
+#     start_bot_thread()
+#     return JsonResponse({'status': 'Bot is running in the background!'})
