@@ -27,7 +27,7 @@ ALERT_THRESHOLDS = {
     "uv": 6,        
     "temperature": 30,        
     "wind_speed": 15,       
-    "pm2_5": 75,             
+    "pm2_5": 36,             
     "rain": 10 
 }
 
@@ -206,9 +206,9 @@ def get_formatted_data(measurement, selected_device):
             return "NA"
         return round(value) if is_round else value
 
-    print("+++++++++++++++++++++++++++++++++++++++")
+    #print("+++++++++++++++++++++++++++++++++++++++")
     print(measurement.get('uv'))
-    print("+++++++++++++++++++++++++++++++++++++++")
+    #print("+++++++++++++++++++++++++++++++++++++++")
     
     uv_description = uv_index(measurement.get('uv'))
     pm1_description = pm_level(measurement.get('pm1'), "PM1.0")
@@ -258,7 +258,6 @@ def handle_device_selection(message):
         save_selected_device_to_db(user_id=message.from_user.id, context=user_context[chat_id], device_id=device_id)
 
     if device_id:
-        # ✅ Ահա այստեղ պետք է լինեն ALERT կարգավորումները
         if chat_id in user_alert_settings and user_alert_settings[chat_id].get("status") == "setting_location":
             user_alert_settings[chat_id] = {
                 "status": "active",
@@ -328,9 +327,8 @@ def help(message):
 <b>/Website 🌐:</b> Visit our website for more information.\n
 <b>/Map 🗺️​:</b> View the locations of all devices on a map.\n
 <b>/Share_location 🌍​:</b> Share your location.\n
+<b>/Alert 🚨:</b> Set up alerts when climate conditions exceed safe levels.\n
 ''', parse_mode='HTML')
-
-#For future add <b>/Share_location 🌍​:</b> Share your location.\n in commands=['Help']
 
 @bot.message_handler(commands=['Change_device'])
 @log_command_decorator
@@ -468,13 +466,10 @@ def request_location(message):
     
 @bot.message_handler(commands=['back'])
 def go_back_to_menu(message):
-    # Logic for going back to the menu
     bot.send_message(
         message.chat.id,
         "You are back to the main menu. How can I assist you?",
         reply_markup=get_command_menu()
-
-        # Remove the custom keyboard
     )
 
 @bot.message_handler(content_types=['location'])
@@ -557,8 +552,8 @@ def detect_weather_condition(measurement):
         return "Cloudy ☁️"
     elif lux and lux > 5 and uv and uv > 3:
         return "Sunny ☀️"
-    # elif temperature is not None and temperature > 30 and humidity and humidity < 20 and wind_speed and wind_speed > 15:
-    #     return "Increased fire risk 🔥​"
+    elif temperature is not None and temperature > 30 and humidity and humidity < 20 and wind_speed and wind_speed > 15:
+        return "Increased fire risk 🔥​"
     else:
         return "Nothing detected ❌​"
 
