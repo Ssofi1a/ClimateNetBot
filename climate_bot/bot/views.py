@@ -24,11 +24,11 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 # django.setup()
 
 ALERT_THRESHOLDS = {
-    "uv": -1,        
-    "temperature": 5,        
-    "wind_speed": 0,       
-    "pm2_5": 1,             
-    "rain": 1  
+    "uv": 6,        
+    "temperature": 30,        
+    "wind_speed": 15,       
+    "pm2_5": 75,             
+    "rain": 10 
 }
 
 def get_device_data():
