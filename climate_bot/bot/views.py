@@ -24,11 +24,11 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 # django.setup()
 
 ALERT_THRESHOLDS = {
-    "uv": 7,                  # Ուլտրամանուշակագույն բարձր՝ > 7
-    "temperature": 5,        # Շոգ եղանակ՝ > 35°C
-    "wind_speed": 15,         # Ուժեղ քամի՝ > 15 m/s
-    "pm2_5": 75,              # Բարձր օդի աղտոտվածություն՝ > 75 μg/m³
-    "rain": 20                # Ուժեղ տեղումներ՝ > 20 mm
+    "uv": -1,        
+    "temperature": 5,        
+    "wind_speed": 0,       
+    "pm2_5": 1,             
+    "rain": 1  
 }
 
 def get_device_data():
@@ -292,8 +292,7 @@ def get_command_menu(cur=None):
         types.KeyboardButton('/Website 🌐'),
         types.KeyboardButton('/Map 🗺️'),
         types.KeyboardButton('/Share_location 🌍​'),
-        types.KeyboardButton('/Alert'),
-    )
+        types.KeyboardButton('/Alert 🚨'))
     return command_markup
 
 @bot.message_handler(commands=['Current'])
@@ -499,36 +498,47 @@ def handle_location(message):
             "Failed to get your location. Please try again."
         )
 
+import time
+
 def alert_check_loop():
     print("✅ alert_check_loop() STARTED")
 
     while True:
-        print("🔄 Checking alerts...")
+        try:
+            print("🔄 Checking alerts...")
+            for chat_id, setting in user_alert_settings.items():
+                if setting.get("status") != "active":
+                    continue
 
-        for chat_id, setting in user_alert_settings.items():
-            print(f"🔍 Chat {chat_id} — Status: {setting.get('status')}")
+                device_id = setting.get("device_id")
+                selected_device = setting.get("selected_device")
+                measurement = fetch_latest_measurement(device_id)
 
-            if setting.get("status") != "active":
-                continue
+                if measurement:
+                    alerts = []
+                    if measurement.get("temperature") and measurement["temperature"] > ALERT_THRESHOLDS["temperature"]:
+                        alerts.append(f"🔥 Temperature is {measurement['temperature']} °C — stay hydrated!")
 
-            device_id = setting.get("device_id")
-            selected_device = setting.get("selected_device")
+                    if measurement.get("uv") and measurement["uv"] > ALERT_THRESHOLDS["uv"]:
+                        alerts.append(f"☀️ UV Index is {measurement['uv']} — wear sunscreen!")
 
-            measurement = fetch_latest_measurement(device_id)
-            print(f"📡 Measurement from {selected_device}: {measurement}")
+                    if measurement.get("pm2_5") and measurement["pm2_5"] > ALERT_THRESHOLDS["pm2_5"]:
+                        alerts.append(f"😷​ PM2.5 level is {measurement['pm2_5']} µg/m³. Air quality is poor, consider wearing a mask!")
 
-            if measurement:
-                alerts = []
+                    if measurement.get("wind_speed") and measurement["wind_speed"] > ALERT_THRESHOLDS["wind_speed"]:
+                        alerts.append(f"🌪️ Wind Speed is {measurement['wind_speed']} m/s is dangerously high! Secure loose items and stay indoors.")
+                    
+                    if measurement.get("rain") and measurement["rain"] > ALERT_THRESHOLDS["rain"]:
+                        alerts.append(f"🌧️ Rainfall is {measurement['rain']} mm/h is too high! Take shelter and avoid outdoor activities.")
 
-                if measurement.get("temperature") and measurement["temperature"] > ALERT_THRESHOLDS["temperature"]:
-                    alerts.append(f"🔥 Temperature is {measurement['temperature']}°C — stay hydrated!")
+                    if alerts:
+                        message = f"<b>⚠️ Climate Alert for {selected_device} ⚠️</b>\n\n" + "\n".join(alerts)
+                        bot.send_message(chat_id, message, parse_mode="HTML")
 
-                if measurement.get("uv") and measurement["uv"] > ALERT_THRESHOLDS["uv"]:
-                    alerts.append(f"☀️ UV Index is {measurement['uv']} — wear sunscreen!")
+        except Exception as e:
+            print(f"⚠️ Error in alert loop: {e}")
+        time.sleep(30)
 
-                if alerts:
-                    message = f"<b>⚠️ Climate Alert for {selected_device} ⚠️</b>\n\n" + "\n".join(alerts)
-                    bot.send_message(chat_id, message, parse_mode="HTML")
 
 
 def detect_weather_condition(measurement):
